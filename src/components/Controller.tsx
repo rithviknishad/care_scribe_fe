@@ -19,7 +19,6 @@ import ButtonV2 from "@/components/Common/ButtonV2";
 export function Controller() {
   const [status, setStatus] = useState<ScribeStatus>("IDLE");
   const { t } = useTranslation();
-  const [micAllowed, setMicAllowed] = useState<null | boolean>(null);
   const [transcript, setTranscript] = useState<string>();
   const timer = useTimer();
   const [lastTranscript, setLastTranscript] = useState<string>();
@@ -205,6 +204,7 @@ Level of consciousness is alert. The action to be taken is plan for home care. P
     });
     if (response.error) throw Error("Error creating scribe instance");
     if (!response.data) throw Error("Response did not return any data");
+
     await Promise.all(
       audioBlobs.map((blob) =>
         uploadAudio(blob, response.data?.external_id ?? ""),
@@ -301,7 +301,7 @@ Level of consciousness is alert. The action to be taken is plan for home care. P
         className={`fixed bottom-5 right-5 z-40 flex flex-col items-end gap-4 transition-all`}
       >
         <div
-          className={`${status === "IDLE" ? "max-h-0 opacity-0" : "max-h-[300px]"} w-full overflow-hidden rounded-2xl ${status === "REVIEWING" && !(openEditTranscript || (toReview && !toReview.length)) ? "" : "border border-secondary-400"} bg-white transition-all delay-100`}
+          className={`${status === "IDLE" ? "max-h-0 opacity-0" : "max-h-[400px]"} w-full overflow-hidden rounded-2xl ${status === "REVIEWING" && !(openEditTranscript || (toReview && !toReview.length)) ? "" : "border border-secondary-400"} bg-white transition-all delay-100`}
         >
           {status === "RECORDING" && (
             <div className="flex items-center justify-center p-4 py-10">
@@ -331,6 +331,30 @@ Level of consciousness is alert. The action to be taken is plan for home care. P
                   <p className="mb-4 text-sm font-bold text-red-500">
                     {t("could_not_autofill")}
                   </p>
+                )}
+                {audioBlobs.length > 0 && (
+                  <div className="mb-4">
+                    <div className="rounded border border-secondary-400 bg-secondary-200">
+                      <audio controls className="plain-audio w-full">
+                        {audioBlobs.map((blob, index) => (
+                          <source
+                            key={index}
+                            src={URL.createObjectURL(blob)}
+                            type="audio/mpeg"
+                          />
+                        ))}
+                      </audio>
+                    </div>
+                    <ButtonV2
+                      variant="primary"
+                      ghost
+                      border
+                      className="mt-2 w-full"
+                      onClick={handleStopRecording}
+                    >
+                      {t("transcribe_again")}
+                    </ButtonV2>
+                  </div>
                 )}
                 <div className="text-base font-semibold">
                   {t("transcript_information")}
@@ -365,7 +389,7 @@ Level of consciousness is alert. The action to be taken is plan for home care. P
                 </ButtonV2>
                 {!(toReview && !toReview.length) && (
                   <button
-                    className="absolute right-4 top-4 text-xs text-gray-600 hover:text-gray-800"
+                    className="absolute -top-6 right-4 text-xs text-gray-100 hover:text-gray-200"
                     onClick={() => setOpenEditTranscript(false)}
                   >
                     {t("close")}
@@ -385,9 +409,10 @@ Level of consciousness is alert. The action to be taken is plan for home care. P
           !(openEditTranscript || (toReview && !toReview.length)) && (
             <button
               onClick={() => setOpenEditTranscript(true)}
-              className="max-h-[50px] w-40 overflow-hidden rounded-lg bg-black/20 p-2 text-left text-xs text-white hover:bg-black/40 md:max-h-[100px]"
+              className="flex max-h-[50px] w-40 items-center gap-2 overflow-hidden rounded-lg bg-black/20 p-2 text-left text-xs text-white transition-all hover:bg-black/40 md:max-h-[100px]"
             >
-              {transcript}
+              <div>{transcript}</div>
+              <CareIcon icon="l-angle-up" className="text-xl" />
             </button>
           )}
         <div className="flex items-center gap-2">
